@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+
+  <h1 id="title">imPG</h1>
+  <h2 id="sub-title">Kids in mind</h2>
+  <img id="film-cover" style="display: none">
+
+ <!--  <div id="film-details" style="display: none">
+    <img id="film-cover" style="display: none">
+  </div> -->
+  <button id="search-btn" style="display: none" onclick="myFunction()">New Search</button>
+
+  <div id="form">
+  <form id="pgform" class="form-style-7" action="https://impg-app.herokuapp.com" method="get">
+    <ul>
+      <li>
+          <label for="name">Movie Name</label>
+          <input type="text" name="name" maxlength="100" placeholder="Avengers" id="imdbName" name="imdbName">
+          <input name="imdbRef" id="imdbRef" type="hidden" />
+      </li>
+
+      <li>
+          <input type="submit" value="Search" >
+      </li>
+    </ul>
+  </form>
+  </div>
+
+  <!-- <div class="container">
+    <div class="content">
+      <div class="blog-title">
+        <h2><a id="title">Profanity</a><a id="overall-vote">7 of 19 found this moderate</a></h2>
+        <div id="status" class="status yellow">moderate</div>
+      </div>
+    
+      <div class="comments" id="comments">
+        <p>During a comical scene, one character gives someone the middle-finger.</p>
+        <div class="seperator"></div>
+        <p>Sh*t is heard 8 times, ass is heard once, hell is heard 3 times, d*ck and sh*t are heard in a song that plays.</p>
+      </div>
+    </div>
+  
+    <div class="seperator votes-container">
+      <div class="votes" id="votes">
+        <ul>
+          <li><a class="red">SEVERE - 4</a></li>
+          <li><a class="orange">MODERATE - 7</a></li>
+          <li><a class="yellow">MILD - 8</a></li>
+          <li><a class="green">NONE - 0</a></li>
+        </ul>
+      </div>
+    </div>
+  </div> -->
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="request.js"></script>
+  <!-- <script type="text/javascript" src="search.js"></script> -->
+
+   <link type="text/css" href="jquery-ui.min.css" rel="stylesheet" />
+<script type="text/javascript" src="jquery-ui.min.js"></script>
+
+  <script type="text/javascript">
+
+// $("input#imdbName").on({
+//   keydown: function(e) {
+//     if (e.which === 32)
+//       return false;
+//   },
+//   change: function() {
+//     this.value = this.value.replace(/\s/g, "");
+//   }
+// });
+
+    /* attach a submit handler to the form */
+$("#pgform").submit(function(event) {
+
+    myFunction();
+
+    /* stop form from submitting normally */
+    event.preventDefault();
+
+    /* get the action attribute from the <form action=""> element */
+    // var $form = $( this );
+    var url = $(this).attr( 'action' );
+
+    /* Send the data using GET with element id imdbRef*/
+    var posting = $.get(url, 
+      { 
+        imdbRef: $('#imdbRef').val()  //todo= FIX THIS - no longer ref, but result from search
+      }
+      );
+
+      posting.done(function(data) {
+        console.log(data);
+
+        // var dataTable = displayArrayAsTable(data);
+        // document.body.appendChild(dataTable);
+
+        data.map(function(result){
+          var container = document.createElement('div');
+          container.className = 'container';
+
+          var content = document.createElement('div');
+          content.className = 'content';
+
+          var bt = document.createElement('div');
+          bt.className = 'blog-title';
+
+          var h2 = document.createElement('h2');
+          var title = document.createElement('a');
+          title.id = 'title';
+
+          var resultTitle = result.title;
+          if(resultTitle.startsWith("Sex"))
+          {
+            resultTitle = "Nudity";
+          }
+          title.innerHTML = resultTitle;
+
+          var overallVote = document.createElement('a');
+          overallVote.id = 'overall-vote';
+          overallVote.innerHTML = result.overallVote;
+
+          h2.appendChild(title);
+          h2.appendChild(overallVote);
+
+          var overallStatus = result.overallStatus;
+          var status = document.createElement('div');
+          status.id = 'status';
+          status.innerHTML = overallStatus;
+
+          if(overallStatus === 'NONE')
+            status.className = 'status green'; //need to set colour
+          else if(overallStatus === 'MILD')
+            status.className = 'status yellow'; //need to set colour
+          else if(overallStatus === 'MODERATE')
+            status.className = 'status orange'; //need to set colour
+          else if(overallStatus === 'SEVERE')
+            status.className = 'status red'; //need to set colour
+        
+          bt.appendChild(h2);
+          bt.appendChild(status);
+
+          content.appendChild(bt);
+
+          var comments = document.createElement('div');
+          comments.className = 'comments';
+          comments.id = 'comments';
+          for (var comment of result.comments) 
+          {
+            var pElem = document.createElement('p');
+            pElem.innerHTML = comment;
+
+            comments.appendChild(pElem);
+
+            var seperator = document.createElement('div');
+            seperator.className = "seperator";
+            comments.appendChild(seperator);
+          }
+
+          content.appendChild(comments);
+
+
+          var votesContainer = document.createElement('div');
+          votesContainer.className = 'seperator votes-container';
+          
+          var votes = document.createElement('div');
+          votes.className = 'votes';
+          votes.id = 'votes';
+
+          var ul = document.createElement('ul');
+
+          var none = result.votesByStatusType.NONE;
+          var mild = result.votesByStatusType.MILD;
+          var moderate = result.votesByStatusType.MODERATE;
+          var severe = result.votesByStatusType.SEVERE;
+
+          var li = document.createElement('li');
+          var p = document.createElement('a');
+          p.innerHTML = "NONE - " + none;
+          p.className = "green"
+          li.appendChild(p);
+          ul.appendChild(li);
+
+          var li1 = document.createElement('li');
+          var p1 = document.createElement('a');
+          p1.innerHTML = "MILD - " + mild;
+          p1.className = "yellow"
+          li1.appendChild(p1);
+          ul.appendChild(li1);
+
+          var li2 = document.createElement('li');
+          var p2 = document.createElement('a');
+          p2.innerHTML = "MODERATE - " + moderate;
+          p2.className = "orange"
+          li2.appendChild(p2);
+          ul.appendChild(li2);
+
+          var li3 = document.createElement('li');
+          var p3 = document.createElement('a');
+          p3.innerHTML = "SEVERE - " + severe;
+          p3.className = "red"
+          li3.appendChild(p3);
+          ul.appendChild(li3);
+
+          votes.appendChild(ul);
+          votesContainer.appendChild(votes);
+
+          content.appendChild(votesContainer);
+          container.appendChild(content);
+          document.body.appendChild(container);
+
+          console.log(comments);
+         });
+    });
+
+});
+
+$(function(){
+    $("#imdbName").autocomplete({
+        source: function (request, response) {
+            if(request.term.length < 2)
+            {
+                return ;
+            }
+
+            var reqNoSpaces = request.term.replace(/\s/g, '_')
+            var req = reqNoSpaces[0] + '/' + reqNoSpaces + '.json';
+                $.ajax({
+                    url: "http://sg.media-imdb.com/suggests/" + req,//url
+                    dataType: "jsonp",
+                    cache: true,
+                    jsonp: false,
+                    jsonpCallback: "imdb$" + reqNoSpaces,
+                    success: function (data) {
+                        response($.map(data.d, function (item) {
+                            var imgSource = (typeof item.i !== 'undefined') ? item.i[0] : '#';
+
+                            var filmNameAndYear = 
+                            (typeof item.y !== 'undefined') ?
+                              item.l + ' (' + item.y + ')' : item.l;
+                          return {
+                            label: filmNameAndYear,
+                            icon: imgSource, 
+                            id: item.id.substring(2),
+                            // icon: imgSource
+                          }
+                       }))
+                    }
+                });
+        },
+        select: function (even, ui) {
+             $("#imdbRef").val(ui.item.id);
+             $("#imdbName").val(ui.item.label);
+
+             $("#sub-title").html(ui.item.label);
+             // $("#sub-title").attr("style", "font-size: 20px; font-family: Georgia, 'Times New Roman', Times, serif; line-height: 40px;");
+
+             $("#film-cover").attr("src", ui.item.icon);
+             $("#film-cover").attr("height", 250);
+        }
+    });
+});
+  </script>
+</body>
+</html>
